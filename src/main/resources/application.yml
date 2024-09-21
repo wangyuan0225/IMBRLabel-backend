@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    # 驱动类名称
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 数据库连接的url
+    url: jdbc:mysql://localhost:3306/imbr-label
+    # 连接数据库的用户名
+    username: root
+    # 连接数据库的密码
+    password: 123456
+mybatis:
+  configuration:
+    # 设置驼峰命名自动映射
+    map-underscore-to-camel-case: true
+    # 配置mybatis的日志，指定输出到控制台
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+file:
+  upload-dir: C:\Users\${user.name}\.imbr\upload
