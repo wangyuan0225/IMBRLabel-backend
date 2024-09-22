@@ -1,5 +1,8 @@
 package com.wy0225.imbrlabel.controller;
 
+import com.wy0225.imbrlabel.constant.*;
+import com.wy0225.imbrlabel.utils.*;
+import com.wy0225.imbrlabel.properties.*;
 import com.wy0225.imbrlabel.pojo.DO.UserDO;
 import com.wy0225.imbrlabel.pojo.DTO.UserDTO;
 import com.wy0225.imbrlabel.pojo.DTO.UserRegisterDTO;
@@ -14,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/user") //不知道是什么路径，到时候改吧
 @Slf4j
@@ -23,6 +29,8 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private JwtProperties jwtProperties;
     //登录
     //UserMapper里的SQL语句可能需要改一下
     @PostMapping("/login")
@@ -37,6 +45,21 @@ public class UserController {
 //                .username(userDO.getUsername())
 //                .build();
 //        return Result.success(userVO);
+
+        //登录成功后，生成jwt令牌
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(JwtClaimsConstant.USER_ID, userDO.getId());
+        String token = JwtUtil.createJWT(
+                jwtProperties.getAdminSecretKey(),
+                jwtProperties.getAdminTtl(),
+                claims);
+
+        UserVO userVO = UserVO.builder()
+                .id(userDO.getId())
+                .username(userDO.getUsername())
+                .nickname(userDO.getNickname())
+                .token(token)
+                .build();
 
         return Result.success();
     }
