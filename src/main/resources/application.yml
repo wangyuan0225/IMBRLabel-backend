@@ -7,7 +7,7 @@ spring:
     # 连接数据库的用户名
     username: root
     # 连接数据库的密码
-    password: 123456
+    password: 040119
 mybatis:
   configuration:
     # 设置驼峰命名自动映射
@@ -15,4 +15,4 @@ mybatis:
     # 配置mybatis的日志，指定输出到控制台
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 file:
-  upload-dir: C:\Users\${user.name}\.imbr\upload
+  upload-dir: D:\soft\IMBR\storage
