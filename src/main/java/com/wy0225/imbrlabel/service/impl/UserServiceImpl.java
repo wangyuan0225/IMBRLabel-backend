@@ -2,6 +2,8 @@ package com.wy0225.imbrlabel.service.impl;
 
 import com.wy0225.imbrlabel.constant.UserConstant;
 import com.wy0225.imbrlabel.exception.PasswordErrorException;
+import com.wy0225.imbrlabel.exception.ReSetPasswordNotMatchException;
+import com.wy0225.imbrlabel.exception.UserAlreadyExistException;
 import com.wy0225.imbrlabel.exception.UserNotFoundException;
 import com.wy0225.imbrlabel.mapper.UserMapper;
 import com.wy0225.imbrlabel.pojo.DO.UserDO;
@@ -47,6 +49,15 @@ public class UserServiceImpl implements UserService {
     public void register(UserRegisterDTO userRegisterDTO) {
         userRegisterDTO.setPassword(DigestUtils.md5DigestAsHex(userRegisterDTO.getPassword().getBytes()));
         UserDO userDO = new UserDO();
+        userDO=userMapper.getByUsername(userRegisterDTO.getUsername());
+        //查看用户名是否重复
+        if(userDO!=null){
+            throw new UserAlreadyExistException(UserConstant.USER_ALREADY_EXIST);
+        }
+        //查看两次密码是否相同
+        if(userRegisterDTO.getPassword().equals( userRegisterDTO.getRepassword())){
+            throw new ReSetPasswordNotMatchException(UserConstant.RE_SET_PASSWORD_NOT_MATCH);
+        }
         BeanUtils.copyProperties(userDO, userRegisterDTO);
         userDO.setNickname("新用户");//设置一下默认昵称，虽然好像没什么用
         userMapper.insert(userDO);
