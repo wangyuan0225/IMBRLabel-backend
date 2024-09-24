@@ -10,7 +10,6 @@ import com.wy0225.imbrlabel.pojo.DO.UserDO;
 import com.wy0225.imbrlabel.pojo.DTO.UserDTO;
 import com.wy0225.imbrlabel.pojo.DTO.UserRegisterDTO;
 import com.wy0225.imbrlabel.service.UserService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
