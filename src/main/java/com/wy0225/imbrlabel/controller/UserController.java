@@ -1,5 +1,6 @@
 package com.wy0225.imbrlabel.controller;
 
+import com.wy0225.imbrlabel.config.RedisConfig;
 import com.wy0225.imbrlabel.constant.*;
 import com.wy0225.imbrlabel.utils.*;
 import com.wy0225.imbrlabel.properties.*;
@@ -12,6 +13,7 @@ import com.wy0225.imbrlabel.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,11 +33,16 @@ public class UserController {
 
     @Autowired
     private JwtProperties jwtProperties;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+
     //登录
     //UserMapper里的SQL语句可能需要改一下
     @PostMapping("/login")
     public Result<?> login(@RequestBody UserDTO userDTO) {
         log.info("Login User: {}", userDTO.getUsername());
+
         UserDO userDO=userService.login(userDTO);
         //以后如果需要数据回显的话
         //可以用下面的代码
@@ -52,7 +59,8 @@ public class UserController {
         String token = JwtUtil.createJWT(
                 jwtProperties.getAdminSecretKey(),
                 jwtProperties.getAdminTtl(),
-                claims);
+                claims,
+                redisTemplate);
 
         UserVO userVO = UserVO.builder()
                 .id(userDO.getId())
@@ -61,13 +69,13 @@ public class UserController {
                 .token(token)
                 .build();
 
-        return Result.success();
+        return Result.success(userVO);
     }
 
     //注册
     @PostMapping("/register")
     public Result<?> register(@RequestBody UserRegisterDTO userRegisterDTO) {
-        log.info("Register User: {}",userRegisterDTO .getUsername());
+        log.info("Register User: {}",userRegisterDTO.getUsername());
 
         userService.register(userRegisterDTO);
         return Result.success();

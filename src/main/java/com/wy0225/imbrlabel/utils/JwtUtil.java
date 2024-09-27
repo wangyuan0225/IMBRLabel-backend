@@ -4,12 +4,14 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-
+import org.springframework.data.redis.core.RedisTemplate;
+import java.util.concurrent.TimeUnit;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
 
 public class JwtUtil {
+
     /**
      * 生成jwt
      * 使用Hs256算法, 私匙使用固定秘钥
@@ -19,7 +21,7 @@ public class JwtUtil {
      * @param claims    设置的信息
      * @return
      */
-    public static String createJWT(String secretKey, long ttlMillis, Map<String, Object> claims) {
+    public static String createJWT(String secretKey, long ttlMillis, Map<String, Object> claims,RedisTemplate redisTemplate) {
         // 指定签名的时候使用的签名算法，也就是header那部分
         SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 
@@ -36,7 +38,13 @@ public class JwtUtil {
                 // 设置过期时间
                 .setExpiration(exp);
 
-        return builder.compact();
+        // 生成jwt
+        String jwtToken= builder.compact();
+
+        // 保存到redis中
+        redisTemplate.opsForValue().set( secretKey+ "-" + claims, jwtToken, ttlMillis, TimeUnit.MILLISECONDS);
+
+        return jwtToken;
     }
 
     /**

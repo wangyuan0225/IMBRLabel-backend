@@ -1,16 +1,16 @@
 package com.wy0225.imbrlabel.service.impl;
 
 import com.wy0225.imbrlabel.constant.UserConstant;
-import com.wy0225.imbrlabel.exception.PasswordErrorException;
-import com.wy0225.imbrlabel.exception.ReSetPasswordNotMatchException;
-import com.wy0225.imbrlabel.exception.UserAlreadyExistException;
-import com.wy0225.imbrlabel.exception.UserNotFoundException;
+import com.wy0225.imbrlabel.exception.*;
 import com.wy0225.imbrlabel.mapper.UserMapper;
 import com.wy0225.imbrlabel.pojo.DO.UserDO;
 import com.wy0225.imbrlabel.pojo.DTO.UserDTO;
 import com.wy0225.imbrlabel.pojo.DTO.UserRegisterDTO;
 import com.wy0225.imbrlabel.service.UserService;
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
@@ -21,6 +21,11 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserMapper userMapper;
 
+    /**
+     * 用户登录
+     * @param userDTO
+     * @return
+     */
     @Override
     public UserDO login(UserDTO userDTO) {
         String username = userDTO.getUsername();
@@ -29,13 +34,12 @@ public class UserServiceImpl implements UserService {
         //根据用户名查询数据库中的数据
         UserDO userDO=userMapper.getByUsername(username);
 
-        //异常情况处理
         if(userDO==null){
             //账号不存在
             throw new UserNotFoundException(UserConstant.USER_NOT_REGISTER);
         }
 
-        //用的md5加密
+        //异常情况处理
         password= DigestUtils.md5DigestAsHex(password.getBytes());
         if(!password.equals(userDO.getPassword())){
             throw new PasswordErrorException(UserConstant.PASSWORD_ERROR);
@@ -44,6 +48,10 @@ public class UserServiceImpl implements UserService {
         return userDO;
     }
 
+    /**
+     * 用户注册
+     * @param userRegisterDTO
+     */
     @Override
     public void register(UserRegisterDTO userRegisterDTO) {
         // 检查密码是否匹配

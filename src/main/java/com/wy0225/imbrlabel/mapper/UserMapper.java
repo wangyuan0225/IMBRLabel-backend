@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Select;
 
 @Mapper
 public interface UserMapper {
-    @Select("select * from `imbr-label`.user where username=#{username}")
+    @Select("select * from user where username=#{username}")
     UserDO getByUsername(String username);
 
     @Insert("insert into `imbr-label`.user(username, nickname, password)"+
