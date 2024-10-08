@@ -7,6 +7,7 @@ import com.wy0225.imbrlabel.exception.BusinessException;
 import com.wy0225.imbrlabel.properties.JwtProperties;
 import com.wy0225.imbrlabel.utils.*;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -53,21 +54,28 @@ public class JwtTokenAdminInterceptor implements HandlerInterceptor {
         //2、校验令牌
         try {
             log.info("jwt校验:{}", token);
+            // 获取当前登陆人id
             Claims claims = JwtUtil.parseJWT(jwtProperties.getAdminSecretKey(), token);
             Long userId = Long.valueOf(claims.get(JwtClaimsConstant.USER_ID).toString());
             BaseContext.setCurrentId(userId);
-            // 检查Redis中是否存在以adminSecretKey + "-" + userId为key的数据，以验证token的有效性。
-            Boolean redisResult = redisTemplate.hasKey(jwtProperties.getAdminSecretKey() + "-" + claims);
-            // 如果在Redis中找不到对应的key，说明token无效。
-            if (!redisResult) {
+            // 获取redis存储的令牌
+            Boolean redisToken = redisTemplate.hasKey(token);
+            // 令牌已失效（修改密码后删除token就会失效，无法访问）
+            if (!redisToken) {
                 response.setStatus(401); // 设置HTTP状态码为401，表示未授权。
                 throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "Invalid Token"); // 抛出业务异常。
             }
             //3、通过，放行
             return true;
+        }  catch (ExpiredJwtException e) {
+            // JWT已过期
+            log.error("JWT已过期: {}", e.getMessage(), e);
+            response.setStatus(401);
+            return false;
         } catch (Exception ex) {
             //4、不通过，响应401状态码
             response.setStatus(401);
+            log.error("jwt令牌校验失败:{}", ex.getMessage());
             return false;
         }
     }

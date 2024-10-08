@@ -8,4 +8,8 @@ public interface UserService {
     UserDO login(UserDTO userDTO);
 
     void register(UserRegisterDTO userRegisterDTO);
+
+    UserDO getPwdById(Long currentId);
+
+    void update(UserDTO userDTO);
 }

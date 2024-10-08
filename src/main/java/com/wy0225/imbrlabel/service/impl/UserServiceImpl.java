@@ -77,4 +77,22 @@ public class UserServiceImpl implements UserService {
         // 插入用户
         userMapper.insert(userDO);
     }
+
+    /**
+     * 根据用户id查询数据库中的密码
+     * @param currentId
+     * @return
+     */
+    @Override
+    public UserDO getPwdById(Long currentId) {
+        return userMapper.getPwdById(currentId);
+    }
+
+    @Override
+    public void update(UserDTO userDTO) {  // 传过来的密码没加密
+        String encryptedPassword = DigestUtils.md5DigestAsHex(userDTO.getPassword().getBytes());
+        userDTO.setPassword(encryptedPassword);
+
+        userMapper.update(userDTO);
+    }
 }

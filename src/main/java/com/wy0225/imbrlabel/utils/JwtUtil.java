@@ -21,7 +21,7 @@ public class JwtUtil {
      * @param claims    设置的信息
      * @return
      */
-    public static String createJWT(String secretKey, long ttlMillis, Map<String, Object> claims,RedisTemplate redisTemplate) {
+    public static String createJWT(String secretKey, long ttlMillis, Map<String, Object> claims) {
         // 指定签名的时候使用的签名算法，也就是header那部分
         SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 
@@ -40,9 +40,6 @@ public class JwtUtil {
 
         // 生成jwt
         String jwtToken= builder.compact();
-
-        // 保存到redis中
-        redisTemplate.opsForValue().set( secretKey+ "-" + claims, jwtToken, ttlMillis, TimeUnit.MILLISECONDS);
 
         return jwtToken;
     }
