@@ -1,5 +1,6 @@
 package com.wy0225.imbrlabel.controller;
 
+import com.wy0225.imbrlabel.context.BaseContext;
 import com.wy0225.imbrlabel.pojo.Result;
 import com.wy0225.imbrlabel.pojo.DTO.ImageDTO;
 import com.wy0225.imbrlabel.pojo.VO.ImageVO;
@@ -39,9 +40,13 @@ public class ImageController {
             return Result.error("文件不能为空");
         }
         try {
-            Path fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
-            Files.createDirectories(fileStorageLocation);
-            Path targetLocation = fileStorageLocation.resolve(Objects.requireNonNull(file.getOriginalFilename()));
+            Long userId = BaseContext.getCurrentId();
+
+            //创建用户专属文件夹（文件夹名就是UserId）  路径变成user/image
+            Path userDir = Paths.get(uploadDir, String.valueOf(userId)).toAbsolutePath().normalize();
+            Files.createDirectories(userDir);
+
+            Path targetLocation = userDir.resolve(Objects.requireNonNull(file.getOriginalFilename()));
             // 重名文件检测
             if (Files.exists(targetLocation)) {
                 return Result.error("同名文件已存在");
@@ -53,7 +58,7 @@ public class ImageController {
             }
             Files.copy(file.getInputStream(), targetLocation);
             // 获取相对路径
-            String relativePath = fileStorageLocation.relativize(targetLocation).toString().replace("\\", "/");
+            String relativePath = userDir.relativize(targetLocation).toString().replace("\\", "/");
             // 创建并保存 ImageDTO 对象
             ImageDTO imageDTO = getImageDTO(file, contentType, relativePath);
             imageService.upload(imageDTO);
@@ -88,7 +93,9 @@ public class ImageController {
      */
     @GetMapping
     public Result<?> list() {
-        List<ImageVO> images = imageService.list();
+        Long userId = BaseContext.getCurrentId();
+        //新增参数userId
+        List<ImageVO> images = imageService.list(userId);
         return Result.success(images);
     }
 
@@ -99,8 +106,9 @@ public class ImageController {
      */
     @DeleteMapping
     public Result<?> delete(@RequestParam Long id) {
+        Long userId = BaseContext.getCurrentId();
         // 从本地删除
-        String filePath = imageService.getImageById(id).getPath();
+        String filePath = imageService.getImageById(id,userId).getPath();//这里加了参数userId
         if (filePath != null) {
             try {
                 // 从本地删除文件
@@ -111,7 +119,7 @@ public class ImageController {
             }
         }
         // 从数据库删除记录
-        imageService.delete(id);
+        imageService.delete(id,userId);
         return Result.success();
     }
 }

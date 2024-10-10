@@ -20,4 +20,5 @@ public class ImageDO {
     private String annotations;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private Long userId;
 }

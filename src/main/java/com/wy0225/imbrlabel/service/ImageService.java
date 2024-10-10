@@ -19,18 +19,18 @@ public interface ImageService {
      * 获取图片列表
      * @return 图片列表
      */
-    List<ImageVO> list();
+    List<ImageVO> list(Long userId);
 
     /**
      * 删除图片
      * @param id 图片id
      */
-    void delete(Long id);
+    void delete(Long id,Long userId);
 
     /**
      * 获取图片信息
      * @param id 图片id
      * @return 图片信息
      */
-    ImageDTO getImageById(Long id);
+    ImageDTO getImageById(Long id,Long userId);
 }
