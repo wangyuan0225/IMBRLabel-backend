@@ -107,16 +107,14 @@ public class ImageController {
     @DeleteMapping
     public Result<?> delete(@RequestParam Long id) {
         Long userId = BaseContext.getCurrentId();
-        // 从本地删除
-        String filePath = imageService.getImageById(id,userId).getPath();//这里加了参数userId
-        if (filePath != null) {
-            try {
-                // 从本地删除文件
-                Path path = Paths.get(uploadDir).resolve(filePath).toAbsolutePath().normalize();
-                Files.deleteIfExists(path);
-            } catch (IOException e) {
-                return Result.error("文件删除失败: " + e.getMessage());
-            }
+        // 从本地删除，这里加了参数userId
+        String filePath = userId + "/" + imageService.getImageById(id, userId).getPath();
+        try {
+            // 从本地删除文件
+            Path path = Paths.get(uploadDir).resolve(filePath).toAbsolutePath().normalize();
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            return Result.error("文件删除失败: " + e.getMessage());
         }
         // 从数据库删除记录
         imageService.delete(id,userId);

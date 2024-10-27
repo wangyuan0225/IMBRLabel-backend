@@ -20,6 +20,7 @@ import java.util.List;
 public class ImageServiceImpl implements ImageService {
     @Resource
     private ImageMapper imageMapper;
+
     @Override
     public void upload(ImageDTO imageDTO) {
         ImageDO image = new ImageDO();
@@ -49,13 +50,13 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public void delete(Long id,Long userId) {
-        imageMapper.deleteById(id,userId);
+    public void delete(Long id, Long userId) {
+        imageMapper.deleteById(id, userId);
     }
 
     @Override
-    public ImageDTO getImageById(Long id,Long userId) {
-        ImageDO image = imageMapper.selectById(id,userId);
+    public ImageDTO getImageById(Long id, Long userId) {
+        ImageDO image = imageMapper.selectById(id, userId);
         ImageDTO imageDTO = new ImageDTO();
         imageDTO.setName(image.getName());
         imageDTO.setType(image.getType());
