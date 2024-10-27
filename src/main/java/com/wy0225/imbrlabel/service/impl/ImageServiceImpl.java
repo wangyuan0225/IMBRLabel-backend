@@ -41,7 +41,7 @@ public class ImageServiceImpl implements ImageService {
             imageVo.setId(image.getId());
             imageVo.setName(image.getName());
             imageVo.setType(image.getType());
-            imageVo.setPath(image.getPath());
+            imageVo.setPath(image.getUserId() + "/" + image.getPath());
             imageVo.setAnnotations(image.getAnnotations());
             imageVos.add(imageVo);
         }

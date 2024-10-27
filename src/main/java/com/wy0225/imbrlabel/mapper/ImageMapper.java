@@ -15,31 +15,35 @@ import java.util.List;
 public interface ImageMapper {
     /**
      * 添加图像
+     *
      * @param image 图像数据对象
      */
-    @Insert("insert into image(name, type, path, create_time, update_time,user_id) " +
+    @Insert("insert into image(name, type, path, create_time, update_time, user_id) " +
             "values(#{name}, #{type}, #{path}, #{createTime}, #{updateTime},#{userId})")
     void insert(ImageDO image);
 
     /**
      * 获取图像列表
+     *
      * @return 图像列表
      */
-    @Select("select id, name, type, path, annotations, create_time, update_time from image where user_id = #{userId}")
+    @Select("select id, name, type, path, annotations, user_id, create_time, update_time from image where user_id = #{userId}")
     List<ImageDO> list(Long userId);
 
     /**
      * 获取图像信息
+     *
      * @param id 图像ID
      * @return 图像信息
      */
     @Select("select id, name, type, path, annotations, create_time, update_time from image where id = #{id} AND user_id = #{userId}")
-    ImageDO selectById(Long id,Long userId);
+    ImageDO selectById(Long id, Long userId);
 
     /**
      * 删除图像
+     *
      * @param id 图像ID
      */
     @Delete("delete from image where id = #{id} AND user_id = #{userId}")
-    void deleteById(Long id,Long userId);
+    void deleteById(Long id, Long userId);
 }
