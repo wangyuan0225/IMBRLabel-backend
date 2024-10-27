@@ -1,5 +1,6 @@
 package com.wy0225.imbrlabel.controller;
 
+import com.wy0225.imbrlabel.context.BaseContext;
 import com.wy0225.imbrlabel.pojo.Result;
 import com.wy0225.imbrlabel.pojo.DTO.ImageDTO;
 import com.wy0225.imbrlabel.pojo.VO.ImageVO;
@@ -39,13 +40,13 @@ public class ImageController {
             return Result.error("文件不能为空");
         }
         try {
-            Path fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
-            Files.createDirectories(fileStorageLocation);
-            Path targetLocation = fileStorageLocation.resolve(Objects.requireNonNull(file.getOriginalFilename()));
-            // TODO:（建议）上传图片取消同名文件检测，否则会发生多用户上传重名限制等问题
-            //  - 方案1：采用添加时间戳后缀区分
-            //  - 方案2：采用添加_1、_2等后缀区分
-            //  - 方案3：不进行区分，由系统默认添加后缀(1)、(2)
+            Long userId = BaseContext.getCurrentId();
+
+            //创建用户专属文件夹（文件夹名就是UserId）  路径变成user/image
+            Path userDir = Paths.get(uploadDir, String.valueOf(userId)).toAbsolutePath().normalize();
+            Files.createDirectories(userDir);
+
+            Path targetLocation = userDir.resolve(Objects.requireNonNull(file.getOriginalFilename()));
             // 重名文件检测
             if (Files.exists(targetLocation)) {
                 return Result.error("同名文件已存在");
@@ -57,11 +58,9 @@ public class ImageController {
             }
             Files.copy(file.getInputStream(), targetLocation);
             // 获取相对路径
-            String relativePath = fileStorageLocation.relativize(targetLocation).toString().replace("\\", "/");
+            String relativePath = userDir.relativize(targetLocation).toString().replace("\\", "/");
             // 创建并保存 ImageDTO 对象
             ImageDTO imageDTO = getImageDTO(file, contentType, relativePath);
-            // TODO：imageDTO增加用户ID字段，保存用户上传图片的信息
-            //  - 通过ThreadLocalUtil.get()获取用户ID
             imageService.upload(imageDTO);
             return Result.success("文件上传成功: " + relativePath);
         } catch (IOException ex) {
@@ -79,7 +78,6 @@ public class ImageController {
     private static ImageDTO getImageDTO(MultipartFile file, String contentType, String relativePath) {
         ImageDTO imageDTO = new ImageDTO();
         String originalFilename = file.getOriginalFilename();
-        // 获取文件名（不含扩展名）
         if (originalFilename != null) {
             String nameWithoutExtension = originalFilename.contains(".") ? originalFilename.substring(0, originalFilename.lastIndexOf('.')) : originalFilename;
             imageDTO.setName(nameWithoutExtension);
@@ -95,9 +93,9 @@ public class ImageController {
      */
     @GetMapping
     public Result<?> list() {
-        // TODO：传入参数，获取用户上传的图片列表
-        //  - 同样地，通过ThreadLocalUtil.get()获取用户ID
-        List<ImageVO> images = imageService.list();
+        Long userId = BaseContext.getCurrentId();
+        //新增参数userId
+        List<ImageVO> images = imageService.list(userId);
         return Result.success(images);
     }
 
@@ -108,8 +106,9 @@ public class ImageController {
      */
     @DeleteMapping
     public Result<?> delete(@RequestParam Long id) {
+        Long userId = BaseContext.getCurrentId();
         // 从本地删除
-        String filePath = imageService.getImageById(id).getPath();
+        String filePath = imageService.getImageById(id,userId).getPath();//这里加了参数userId
         if (filePath != null) {
             try {
                 // 从本地删除文件
@@ -120,9 +119,7 @@ public class ImageController {
             }
         }
         // 从数据库删除记录
-        // TODO：删除当前用户上传的图片
-        //  - 同样地，通过ThreadLocalUtil.get()获取用户ID
-        imageService.delete(id);
+        imageService.delete(id,userId);
         return Result.success();
     }
 }
