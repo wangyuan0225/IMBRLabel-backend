@@ -21,5 +21,4 @@ public class ImageDO {
     private Long userId;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
-    private Long userId;
 }

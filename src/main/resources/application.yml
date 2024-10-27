@@ -7,13 +7,17 @@ spring:
     # 连接数据库的用户名
     username: root
     # 连接数据库的密码
-    password: 1234
+    password: 123456
   data:
     redis:
       database: 0
       port: 6379
-      host: localhost
-      password: 1234
+      host: 192.168.232.129
+      password: 123456
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 mybatis:
   configuration:
@@ -22,13 +26,13 @@ mybatis:
     # 配置mybatis的日志，指定输出到控制台
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 file:
-  upload-dir: D:\soft\IMBR\storage
+  upload-dir: C:/Users/wangy/.imbr/upload/
 
 label:
   jwt:
     # 设置jwt签名加密时使用的秘钥
     admin-secret-key: itcast
     # 设置jwt过期时间
-    admin-ttl: 7200000
+    admin-ttl: 2592000000
     # 设置前端传递过来的令牌名称
-    admin-token-name: token
+    admin-token-name: Authorization
