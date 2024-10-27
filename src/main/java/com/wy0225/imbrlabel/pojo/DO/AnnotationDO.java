@@ -19,6 +19,7 @@ public class AnnotationDO {
     private String strokeStyle;
     private String fillStyle;
     private Integer lineWidth;
+    private Long userId;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

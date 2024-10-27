@@ -44,15 +44,7 @@ public class UserController {
     public Result<?> login(@RequestBody UserDTO userDTO) {
         log.info("Login User: {}", userDTO.getUsername());
 
-        UserDO userDO=userService.login(userDTO);
-        //以后如果需要数据回显的话
-        //可以用下面的代码
-//        UserVO userVO= UserVO.builder()
-//                .id(userDO.getId())
-//                .nickname(userDO.getNickname())
-//                .username(userDO.getUsername())
-//                .build();
-//        return Result.success(userVO);
+        UserDO userDO = userService.login(userDTO);
 
         //登录成功后，生成jwt令牌
         Map<String, Object> claims = new HashMap<>();
@@ -64,7 +56,7 @@ public class UserController {
                 claims);
 
         // 保存到redis中
-        redisTemplate.opsForValue().set( token, token, System.currentTimeMillis()+jwtProperties.getAdminTtl(), TimeUnit.MILLISECONDS);
+        redisTemplate.opsForValue().set(token, token, System.currentTimeMillis() + jwtProperties.getAdminTtl(), TimeUnit.MILLISECONDS);
 
         UserVO userVO = UserVO.builder()
                 .id(userDO.getId())
@@ -79,7 +71,7 @@ public class UserController {
     //注册
     @PostMapping("/register")
     public Result<?> register(@RequestBody UserRegisterDTO userRegisterDTO) {
-        log.info("Register User: {}",userRegisterDTO.getUsername());
+        log.info("Register User: {}", userRegisterDTO.getUsername());
 
         userService.register(userRegisterDTO);
         return Result.success();
@@ -87,24 +79,24 @@ public class UserController {
 
     // 更新密码
     @PostMapping("/updatePwd")
-    public Result updataPwd(@RequestBody Map<String,String> parmas, @RequestHeader("token")String token){
+    public Result updataPwd(@RequestBody Map<String, String> parmas, @RequestHeader("token") String token) {
         String oldPwd = parmas.get("oldPwd");
         String newPwd = parmas.get("newPwd");
-        String rePwd= parmas.get("rePwd");
+        String rePwd = parmas.get("rePwd");
 
-        if(!StringUtils.hasLength(oldPwd) || !StringUtils.hasLength(newPwd) || !StringUtils.hasLength(rePwd)) {
+        if (!StringUtils.hasLength(oldPwd) || !StringUtils.hasLength(newPwd) || !StringUtils.hasLength(rePwd)) {
             return Result.error("缺少必要的参数");
         }
 
         // 原密码是否正确：获取原token中存储的id，用id查询密码（是加密过的），该密码与加密后的oldPwd进行对比
-        Long currentId=BaseContext.getCurrentId();
-        UserDO user=userService.getPwdById(currentId);
-        if(!user.getPassword().equals(DigestUtils.md5DigestAsHex(oldPwd.getBytes())) ){
+        Long currentId = BaseContext.getCurrentId();
+        UserDO user = userService.getPwdById(currentId);
+        if (!user.getPassword().equals(DigestUtils.md5DigestAsHex(oldPwd.getBytes()))) {
             return Result.error("原密码填写不正确");
         }
 
         // 检验原密码和新密码是否一样
-        if(oldPwd.equals(newPwd)){
+        if (oldPwd.equals(newPwd)) {
             return Result.error("新密码与原密码一致");
         }
 

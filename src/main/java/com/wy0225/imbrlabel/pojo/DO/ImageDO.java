@@ -18,6 +18,7 @@ public class ImageDO {
     private String type;
     private String path;
     private String annotations;
+    private Long userId;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }
