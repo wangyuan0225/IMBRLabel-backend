@@ -7,10 +7,7 @@ import com.wy0225.imbrlabel.pojo.DO.UserDO;
 import com.wy0225.imbrlabel.pojo.DTO.UserDTO;
 import com.wy0225.imbrlabel.pojo.DTO.UserRegisterDTO;
 import com.wy0225.imbrlabel.service.UserService;
-import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
@@ -84,8 +81,8 @@ public class UserServiceImpl implements UserService {
      * @return
      */
     @Override
-    public UserDO getPwdById(Long currentId) {
-        return userMapper.getPwdById(currentId);
+    public UserDO getUserById(Long currentId) {
+        return userMapper.getUserById(currentId);
     }
 
     @Override

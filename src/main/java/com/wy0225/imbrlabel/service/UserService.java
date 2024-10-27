@@ -9,7 +9,7 @@ public interface UserService {
 
     void register(UserRegisterDTO userRegisterDTO);
 
-    UserDO getPwdById(Long currentId);
+    UserDO getUserById(Long currentId);
 
     void update(UserDTO userDTO);
 }

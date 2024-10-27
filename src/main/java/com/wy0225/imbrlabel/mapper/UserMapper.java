@@ -17,7 +17,7 @@ public interface UserMapper {
     void insert(UserDO userDO);
 
     @Select("select * from user where id=#{currentId}")
-    UserDO getPwdById(Long currentId);
+    UserDO getUserById(Long currentId);
 
     void update(UserDTO userdto);
 }

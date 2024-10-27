@@ -1,7 +1,6 @@
 package com.wy0225.imbrlabel.pojo.DO;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,5 +12,6 @@ public class UserDO {
     private String username;
     private String password;
     private String nickname;
+    private String email;
     private String token;
 }
