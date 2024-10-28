@@ -1,10 +1,51 @@
-**1.** **项目概述**
+## 建表语句
+```sql
+create table annotation
+(
+    id           bigint auto_increment
+        primary key,
+    name         varchar(255) null comment '模板名',
+    label        varchar(255) null comment '标签',
+    stroke_style varchar(255) null comment '边线颜色',
+    fill_style   varchar(255) null comment '填充颜色',
+    line_width   int          null comment '边线宽度',
+    user_id      bigint       null comment '用户id',
+    create_time  datetime     null,
+    update_time  datetime     null
+);
+
+create table image
+(
+    id          bigint auto_increment
+        primary key,
+    name        varchar(255) null comment '图片名称',
+    type        varchar(7)   null comment '图片格式',
+    path        varchar(255) null comment '图片路径',
+    annotations longtext     null comment '标记文本',
+    user_id     bigint       null comment '用户id',
+    create_time datetime     null,
+    update_time datetime     null
+);
+
+create table user
+(
+    id       bigint auto_increment
+        primary key,
+    username varchar(255) null comment '用户名',
+    nickname varchar(255) null comment '用户昵称',
+    password varchar(255) null comment '用户密码',
+    email    varchar(255) null
+)
+    comment '用户表';
+```
+
+## **项目概述**
 
 - **项目名称**：IMBRLabel
 - **项目目标**：创建一个用户友好的图像标注工具，用于机器学习和计算机视觉项目中的数据准备。
 - **目标用户**：数据科学家、机器学习工程师、研究人员和学生。
 
-**2.** **功能需求**
+## **功能需求**
 
 **2.1** **用户界面**
 
