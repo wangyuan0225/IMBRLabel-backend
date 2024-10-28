@@ -124,6 +124,7 @@ public class UserController {
         UserVO userVO = UserVO.builder()
                 .nickname(user.getNickname())
                 .email(user.getEmail())
+                .username(user.getUsername())
                 .build();
 
         return Result.success(userVO);
@@ -134,14 +135,15 @@ public class UserController {
     public Result<?> updateUserInfo(@RequestBody UserDTO userDTO) {
         Long currentId = BaseContext.getCurrentId();
         UserDO userDO = userService.getUserById(currentId);
+
+        if (userDO == null) {
+            return Result.error("用户不存在");
+        }
+
         UserDTO user = UserDTO.builder()
                 .id(currentId)
                 .username(userDO.getUsername())
                 .build();
-
-        if (user == null) {
-            return Result.error("用户不存在");
-        }
 
         // 更新用户信息
         user.setNickname(userDTO.getNickname());

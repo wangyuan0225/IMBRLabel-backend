@@ -86,10 +86,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void update(UserDTO userDTO) {  // 传过来的密码没加密
-        String encryptedPassword = DigestUtils.md5DigestAsHex(userDTO.getPassword().getBytes());
-        userDTO.setPassword(encryptedPassword);
+    public void update(UserDTO userDTO) {
+        // 添加日志记录
+        System.out.println("Updating user: " + userDTO);
 
-        userMapper.update(userDTO);
+        if (userDTO.getPassword() == null) {
+            userMapper.update(userDTO);
+        } else {
+            // 传过来的密码没加密
+            String encryptedPassword = DigestUtils.md5DigestAsHex(userDTO.getPassword().getBytes());
+            userDTO.setPassword(encryptedPassword);
+            userMapper.update(userDTO);
+        }
+
+        // 更新后日志记录
+        System.out.println("User updated: " + userDTO);
     }
 }

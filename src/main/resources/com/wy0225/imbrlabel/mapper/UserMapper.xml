@@ -8,7 +8,9 @@
         update user
         <set>
             <if test="username!=null and username!=''">username=#{username},</if>
-            <if test="password!=null and password!=''">password=#{password}</if>
+            <if test="password!=null and password!=''">password=#{password},</if>
+            <if test="email!=null and email!=''">email=#{email},</if>
+            <if test="nickname!=null and nickname!=''">nickname=#{nickname}</if>
         </set>
         where id = #{id}
     </update>
