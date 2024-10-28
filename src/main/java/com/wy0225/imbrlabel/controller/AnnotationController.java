@@ -50,13 +50,14 @@ public class AnnotationController {
     }
 
     /**
-     * 为当前图像保存标注
-     * @param imageId 图像ID
-     * @param annotations 标注信息
-     * @return 保存结果
+     * 为图像添加标注
+     * @param payload 请求体
+     * @return 添加结果
      */
     @PatchMapping
-    public Result<?> addAnnotationToImage(@RequestParam Long imageId, @RequestParam String annotations) {
+    public Result<?> addAnnotationToImage(@RequestBody Map<String, Object> payload) {
+        Long imageId = Long.parseLong((String) payload.get("imageId"));
+        String annotations = (String) payload.get("annotations");
         annotationService.addAnnotationToImage(imageId, annotations);
         return Result.success();
     }
@@ -104,8 +105,14 @@ public class AnnotationController {
         return Result.success();
     }
 
+    /**
+     * 自动标注
+     * @param payload 请求体
+     * @return 自动标注结果
+     */
     @PatchMapping("/auto")
-    public Result<?> autoAnnotation(@RequestParam String annotations) {
+    public Result<?> autoAnnotation(@RequestBody Map<String, Object> payload) {
+        String annotations = (String) payload.get("annotations");
         // 读取坐标文件
         List<List<Integer>> coordinates = new ArrayList<>();
         try {
@@ -120,7 +127,6 @@ public class AnnotationController {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
             return Result.error("Failed to read coordinates");
         }
 
@@ -133,7 +139,6 @@ public class AnnotationController {
             annotationsList = objectMapper.readValue(decodedAnnotations, new TypeReference<>() {
             });
         } catch (Exception e) {
-            e.printStackTrace();
             return Result.error("Failed to parse annotations");
         }
 
@@ -156,7 +161,6 @@ public class AnnotationController {
         try {
             updatedAnnotations = objectMapper.writeValueAsString(annotationsList);
         } catch (Exception e) {
-            e.printStackTrace();
             return Result.error("Failed to serialize annotations");
         }
 
