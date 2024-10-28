@@ -2,10 +2,13 @@ package com.wy0225.imbrlabel.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wy0225.imbrlabel.context.BaseContext;
 import com.wy0225.imbrlabel.pojo.DTO.AnnotationDTO;
+import com.wy0225.imbrlabel.pojo.DTO.ImageDTO;
 import com.wy0225.imbrlabel.pojo.Result;
 import com.wy0225.imbrlabel.pojo.VO.AnnotationVO;
 import com.wy0225.imbrlabel.service.AnnotationService;
+import com.wy0225.imbrlabel.service.ImageService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +27,9 @@ import java.util.*;
 public class AnnotationController {
     @Resource
     private AnnotationService annotationService;
+
+    @Resource
+    private ImageService imgService;
 
     /**
      * 添加标注模板
@@ -166,5 +172,25 @@ public class AnnotationController {
 
         // 返回结果
         return Result.success(updatedAnnotations);
+    }
+
+    /**
+     * 获取图像详细信息
+     * @param imageId 图像ID
+     * @return 图像详细信息
+     */
+    @GetMapping("/details")
+    public Result<?> getImageDetails(@RequestParam Long imageId) {
+        Long userId = BaseContext.getCurrentId();
+        ImageDTO imageDTO = imgService.getImageById(imageId, userId);
+
+        // 将 ImageDTO 转换为 Map
+        Map<String, Object> details = new HashMap<>();
+        details.put("path", imageDTO.getPath());
+        details.put("name", imageDTO.getName());
+        details.put("annotations", imageDTO.getAnnotations());
+
+        System.out.println("Returning image details: " + details);
+        return Result.success(details);
     }
 }

@@ -60,7 +60,7 @@ public class ImageServiceImpl implements ImageService {
         ImageDTO imageDTO = new ImageDTO();
         imageDTO.setName(image.getName());
         imageDTO.setType(image.getType());
-        imageDTO.setPath(image.getPath());
+        imageDTO.setPath(userId + "/" + image.getPath());
         imageDTO.setAnnotations(image.getAnnotations());
         return imageDTO;
     }
