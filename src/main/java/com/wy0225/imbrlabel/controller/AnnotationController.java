@@ -120,7 +120,7 @@ public class AnnotationController {
     public Result<?> autoAnnotation(@RequestBody Map<String, Object> payload) {
         String annotations = (String) payload.get("annotations");
         System.out.println(annotations);
-        Integer targetPoints = (Integer) payload.get("pointCount");
+        Integer targetPoints = (Integer) payload.get("polygonSides");
         
         // 读取坐标文件
         List<List<Integer>> coordinates = new ArrayList<>();
