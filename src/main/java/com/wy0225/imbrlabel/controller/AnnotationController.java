@@ -3,6 +3,7 @@ package com.wy0225.imbrlabel.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wy0225.imbrlabel.context.BaseContext;
+import com.wy0225.imbrlabel.method.points;
 import com.wy0225.imbrlabel.pojo.DTO.AnnotationDTO;
 import com.wy0225.imbrlabel.pojo.DTO.ImageDTO;
 import com.wy0225.imbrlabel.pojo.Result;
@@ -119,40 +120,67 @@ public class AnnotationController {
     @PatchMapping("/auto")
     public Result<?> autoAnnotation(@RequestBody Map<String, Object> payload) {
         String annotations = (String) payload.get("annotations");
-        System.out.println(annotations);
-        Integer targetPoints = (Integer) payload.get("pointCount");
-        
-        // 读取坐标文件
-        List<List<Integer>> coordinates = new ArrayList<>();
+        Integer polygonsides = (Integer) payload.get("polygonsides");
+
+        List<List<Integer>> allPoints = new ArrayList<>();
         try {
             List<String> lines = Files.readAllLines(Paths.get("src/main/resources/static/output_coordinates.txt"));
-            int totalPoints = 0;
-            // 先计算总点数
-            for (String line : lines) {
-                String[] parts = line.split(", ");
-                totalPoints += parts.length / 2;
-            }
-            
-            // 等间距采样
-            int step = (targetPoints != null && targetPoints < totalPoints) ? totalPoints / targetPoints : 1;
-            int currentPoint = 0;
-
+            // 先读取所有点
             for (String line : lines) {
                 String[] parts = line.split(", ");
                 for (int i = 0; i < parts.length; i += 2) {
-                    // 根据步长决定是否添加该点
-                    if (currentPoint % step == 0 &&
-                        (targetPoints == null || coordinates.size() < targetPoints)) {
-                        List<Integer> point = new ArrayList<>();
-                        point.add(Integer.parseInt(parts[i]));
-                        point.add(Integer.parseInt(parts[i + 1]));
-                        coordinates.add(point);
-                    }
-                    currentPoint++;
+                    List<Integer> point = new ArrayList<>();
+                    point.add(Integer.parseInt(parts[i]));
+                    point.add(Integer.parseInt(parts[i + 1]));
+                    allPoints.add(point);
                 }
             }
-        } catch (Exception e) {
-            return Result.error("Failed to read coordinates");
+
+            // 确保曲线闭合
+            if (!allPoints.isEmpty() && !points.isClosePoints(allPoints.get(0), allPoints.get(allPoints.size() - 1))) {
+                allPoints.add(new ArrayList<>(allPoints.get(0)));
+            }
+
+            // 计算累积距离
+            List<Double> cumulativeDistances = new ArrayList<>();
+            cumulativeDistances.add(0.0);
+            double totalDistance = 0.0;
+
+            for (int i = 1; i < allPoints.size(); i++) {
+                totalDistance += points.distance(allPoints.get(i-1), allPoints.get(i));
+                cumulativeDistances.add(totalDistance);
+            }
+
+            // 根据累积距离进行均匀采样
+            List<List<Integer>> coordinates = new ArrayList<>();
+            if (polygonsides != null && polygonsides > 0) {
+                coordinates.add(allPoints.get(0)); // 添加第一个点
+
+                double step = totalDistance / (polygonsides - 1);
+                double currentDistance = step;
+                int currentIndex = 0;
+
+                for (int i = 1; i < polygonsides - 1; i++) {
+                    while (currentIndex < allPoints.size() - 1 &&
+                            cumulativeDistances.get(currentIndex) < currentDistance) {
+                        currentIndex++;
+                    }
+
+                    // 在两点之间进行插值
+                    if (currentIndex > 0) {
+                        List<Integer> p1 = allPoints.get(currentIndex - 1);
+                        List<Integer> p2 = allPoints.get(currentIndex);
+                        double d1 = cumulativeDistances.get(currentIndex - 1);
+                        double d2 = cumulativeDistances.get(currentIndex);
+                        double ratio = (currentDistance - d1) / (d2 - d1);
+
+                        List<Integer> interpolatedPoint = points.interpolatePoint(p1, p2, ratio);
+                        coordinates.add(interpolatedPoint);
+                    }
+
+                    currentDistance += step;
+                }
+            coordinates.add(allPoints.get(allPoints.size() - 1)); // 添加最后一个点
         }
 
         // 解析现有的 annotation 字符串
@@ -166,6 +194,7 @@ public class AnnotationController {
         } catch (Exception e) {
             return Result.error("Failed to parse annotations");
         }
+
         // 创建新的 annotation，使用 LinkedHashMap 保持插入顺序
         Map<String, Object> newAnnotation = new LinkedHashMap<>();
         newAnnotation.put("label", "");
@@ -190,6 +219,8 @@ public class AnnotationController {
 
         // 返回结果
         return Result.success(updatedAnnotations);
+        } catch (Exception e) {
+            return Result.error("Failed to process coordinates: " + e.getMessage());}
     }
 
     /**
