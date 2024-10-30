@@ -120,7 +120,9 @@ public class AnnotationController {
     @PatchMapping("/auto")
     public Result<?> autoAnnotation(@RequestBody Map<String, Object> payload) {
         String annotations = (String) payload.get("annotations");
-        Integer polygonsides = (Integer) payload.get("polygonsides");
+        System.out.println("annotations:"+annotations);
+        Integer polygonsides = (Integer) payload.get("polygonSides");
+        System.out.println("polygonsides:"+polygonsides);
 
         List<List<Integer>> allPoints = new ArrayList<>();
         try {
@@ -136,24 +138,34 @@ public class AnnotationController {
                 }
             }
 
-            // 确保曲线闭合
-            if (!allPoints.isEmpty() && !points.isClosePoints(allPoints.get(0), allPoints.get(allPoints.size() - 1))) {
-                allPoints.add(new ArrayList<>(allPoints.get(0)));
-            }
+            List<List<Integer>> coordinates;
 
-            // 计算累积距离
-            List<Double> cumulativeDistances = new ArrayList<>();
-            cumulativeDistances.add(0.0);
-            double totalDistance = 0.0;
+            // 如果没有指定 polygonsides，使用所有点
+            if (polygonsides == null) {
+                coordinates = allPoints;
+            } else {
+                // 检查 polygonsides 是否超过原始点数
+                if ( polygonsides > allPoints.size()) {
+                    return Result.error("采样点数不能超过原始点数：" + allPoints.size());
+                }
 
-            for (int i = 1; i < allPoints.size(); i++) {
-                totalDistance += points.distance(allPoints.get(i-1), allPoints.get(i));
-                cumulativeDistances.add(totalDistance);
-            }
+                // 确保曲线闭合
+                if (!allPoints.isEmpty() && !points.isClosePoints(allPoints.get(0), allPoints.get(allPoints.size() - 1))) {
+                    allPoints.add(new ArrayList<>(allPoints.get(0)));
+                }
 
-            // 根据累积距离进行均匀采样
-            List<List<Integer>> coordinates = new ArrayList<>();
-            if (polygonsides != null && polygonsides > 0) {
+                // 计算累积距离
+                List<Double> cumulativeDistances = new ArrayList<>();
+                cumulativeDistances.add(0.0);
+                double totalDistance = 0.0;
+
+                for (int i = 1; i < allPoints.size(); i++) {
+                    totalDistance += points.distance(allPoints.get(i-1), allPoints.get(i));
+                    cumulativeDistances.add(totalDistance);
+                }
+
+                // 根据累积距离进行均匀采样
+                coordinates = new ArrayList<>();
                 coordinates.add(allPoints.get(0)); // 添加第一个点
 
                 double step = totalDistance / (polygonsides - 1);
@@ -180,47 +192,46 @@ public class AnnotationController {
 
                     currentDistance += step;
                 }
-            coordinates.add(allPoints.get(allPoints.size() - 1)); // 添加最后一个点
-        }
+                coordinates.add(allPoints.get(allPoints.size() - 1)); // 添加最后一个点
+                System.out.println("coordinates:"+coordinates);
+            }
 
-        // 解析现有的 annotation 字符串
-        ObjectMapper objectMapper = new ObjectMapper();
-        List<Map<String, Object>> annotationsList;
-        try {
-            // 解码并解析 JSON 字符串
-            String decodedAnnotations = java.net.URLDecoder.decode(annotations, StandardCharsets.UTF_8);
-            annotationsList = objectMapper.readValue(decodedAnnotations, new TypeReference<>() {
-            });
+            // 解析现有的 annotation 字符串
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<Map<String, Object>> annotationsList;
+            try {
+                // 解码并解析 JSON 字符串
+                String decodedAnnotations = java.net.URLDecoder.decode(annotations, StandardCharsets.UTF_8);
+                annotationsList = objectMapper.readValue(decodedAnnotations, new TypeReference<>() {
+                });
+            } catch (Exception e) {
+                return Result.error("Failed to parse annotations");
+            }
+
+            // 创建新的 annotation
+            Map<String, Object> newAnnotation = new LinkedHashMap<>();
+            newAnnotation.put("label", "");
+            newAnnotation.put("coor", coordinates);
+            newAnnotation.put("active", false);
+            newAnnotation.put("creating", false);
+            newAnnotation.put("dragging", false);
+            newAnnotation.put("uuid", UUID.randomUUID().toString());
+            newAnnotation.put("index", annotationsList.size());
+            newAnnotation.put("type", 2);
+
+            annotationsList.add(newAnnotation);
+
+            String updatedAnnotations;
+            try {
+                updatedAnnotations = objectMapper.writeValueAsString(annotationsList);
+            } catch (Exception e) {
+                return Result.error("Failed to serialize annotations");
+            }
+
+            return Result.success(updatedAnnotations);
         } catch (Exception e) {
-            return Result.error("Failed to parse annotations");
+            return Result.error("Failed to process coordinates: " + e.getMessage());
         }
-
-        // 创建新的 annotation，使用 LinkedHashMap 保持插入顺序
-        Map<String, Object> newAnnotation = new LinkedHashMap<>();
-        newAnnotation.put("label", "");
-        newAnnotation.put("coor", coordinates);
-        newAnnotation.put("active", false);
-        newAnnotation.put("creating", false);
-        newAnnotation.put("dragging", false);
-        newAnnotation.put("uuid", UUID.randomUUID().toString());
-        newAnnotation.put("index", annotationsList.size());
-        newAnnotation.put("type", 2);
-
-        // 将新 annotation 添加到 annotations 列表的末尾
-        annotationsList.add(newAnnotation);
-
-        // 将更新后的 annotations 转换回字符串
-        String updatedAnnotations;
-        try {
-            updatedAnnotations = objectMapper.writeValueAsString(annotationsList);
-        } catch (Exception e) {
-            return Result.error("Failed to serialize annotations");
-        }
-
-        // 返回结果
-        return Result.success(updatedAnnotations);
-        } catch (Exception e) {
-            return Result.error("Failed to process coordinates: " + e.getMessage());}
     }
 
     /**
