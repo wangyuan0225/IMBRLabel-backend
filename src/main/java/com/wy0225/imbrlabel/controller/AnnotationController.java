@@ -120,9 +120,7 @@ public class AnnotationController {
     @PatchMapping("/auto")
     public Result<?> autoAnnotation(@RequestBody Map<String, Object> payload) {
         String annotations = (String) payload.get("annotations");
-        System.out.println("annotations:"+annotations);
         Integer polygonsides = (Integer) payload.get("polygonSides");
-        System.out.println("polygonsides:"+polygonsides);
 
         List<List<Integer>> allPoints = new ArrayList<>();
         try {
