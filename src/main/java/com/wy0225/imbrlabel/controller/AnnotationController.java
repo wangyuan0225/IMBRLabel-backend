@@ -14,6 +14,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -113,7 +114,7 @@ public class AnnotationController {
     }
 
     /**
-     * 自动标注
+     * 半自动标注
      * @param payload 请求体
      * @return 自动标注结果
      */
@@ -250,5 +251,68 @@ public class AnnotationController {
 
         System.out.println("Returning image details: " + details);
         return Result.success(details);
+    }
+
+
+    /**
+     * 全自动标注
+     * 访问一个文档的所有标注，以换行符为分界符，
+     */
+    @PatchMapping("/fullauto")
+    public Result<?> fullautoAnnotation(@RequestBody Map<String, Object> payload) {
+        String annotations = (String) payload.get("annotations");
+
+        try {
+            // 读取所有坐标行
+            List<String> lines = Files.readAllLines(Paths.get("src/main/resources/static/output_full.txt"));
+
+            // 解析现有的 annotation 字符串
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<Map<String, Object>> annotationsList;
+            try {
+                // 解码并解析 JSON 字符串
+                String decodedAnnotations = java.net.URLDecoder.decode(annotations, StandardCharsets.UTF_8);
+                annotationsList = objectMapper.readValue(decodedAnnotations, new TypeReference<>() {});
+            } catch (Exception e) {
+                return Result.error("Failed to parse annotations");
+            }
+
+            // 处理每一个多边形
+            for (int lineIndex=0;lineIndex<lines.size();lineIndex++) {
+                String[] parts = lines.get(lineIndex).split(",");
+
+                List<List<Integer>> polygonPoints = new ArrayList<>();  // 一个多边形的所有坐标
+                for (int i = 0; i < parts.length; i+=2) {
+                    List<Integer> point = new ArrayList<>();   // 存放该行所有坐标
+                    point.add(Integer.parseInt(parts[i]));
+                    point.add(Integer.parseInt(parts[i + 1]));
+                    polygonPoints.add(point);
+                }
+
+                // 创建新的标注对象
+                Map<String, Object> newAnnotation = new LinkedHashMap<>();
+                newAnnotation.put("label", "polygons" + (lineIndex + 1));  // 编号从1开始
+                newAnnotation.put("coor", polygonPoints);
+                newAnnotation.put("active", false);
+                newAnnotation.put("creating", false);
+                newAnnotation.put("dragging", false);
+                newAnnotation.put("uuid", UUID.randomUUID().toString());
+                newAnnotation.put("index", annotationsList.size());
+                newAnnotation.put("type", 2);
+
+                annotationsList.add(newAnnotation);
+            }
+
+            String updatedAnnotations;
+            // 将更新后的标注列表序列化为字符串
+            try {
+                updatedAnnotations = objectMapper.writeValueAsString(annotationsList);
+            } catch (Exception e) {
+                return Result.error("序列化标注失败");
+            }
+            return Result.success(updatedAnnotations);
+        } catch (Exception e) {
+            return Result.error("处理坐标失败: " + e.getMessage());
+        }
     }
 }
