@@ -28,6 +28,7 @@ import java.util.*;
 
 import static com.wy0225.imbrlabel.method.annotations.*;
 import static com.wy0225.imbrlabel.method.points.*;
+import static com.wy0225.imbrlabel.method.usePython.callPythonScript;
 
 /**
  * @author wangy
@@ -133,11 +134,6 @@ public class AnnotationController {
      * @param payload 请求体
      * @return 自动标注结果
      */
-    /**
-     * 自动标注
-     * @param payload 请求体
-     * @return 自动标注结果
-     */
     @PatchMapping("/auto")
     public Result<?> autoAnnotation(@RequestBody Map<String, Object> payload) {
         String annotations = (String) payload.get("annotations");
@@ -227,19 +223,19 @@ public class AnnotationController {
     public Result<?> fullautoAnnotation(@RequestBody Map<String, Object> payload) {
         String annotations = (String) payload.get("annotations");
         Integer polygonsides = (Integer) payload.get("polygonSides");
-//        Long imageId = (Long) payload.get("imageId");
+        Long imageId = (Long) payload.get("imageId");
         Integer selectedId = (Integer) payload.get("selectedId");   // 选中的标注id
 
         try {
             // 获取图像路径
-//            Long userId = BaseContext.getCurrentId();
-//            String filePath = userId + "/" + imageService.getImageById(imageId, userId).getPath();
-//            Path imagePath = Paths.get(uploadDir).resolve(filePath).toAbsolutePath().normalize();
+           Long userId = BaseContext.getCurrentId();
+           String filePath = userId + "/" + imageService.getImageById(imageId, userId).getPath();
+           Path imagePath = Paths.get(uploadDir).resolve(filePath).toAbsolutePath().normalize();
             
             // TODO: 调用Python算法生成坐标
+            String coordinatesPath = callPythonScript(imagePath.toString());
             // 假设我们已经生成了坐标文件，并保存在 coordinatesPath 中
             // 读取坐标文件
-            String coordinatesPath = "src/main/resources/static/test1.txt";
             if (!Files.exists(Paths.get(coordinatesPath))) {
                 return Result.error("坐标文件不存在");
             }
