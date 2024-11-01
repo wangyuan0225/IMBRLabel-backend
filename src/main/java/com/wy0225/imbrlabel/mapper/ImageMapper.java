@@ -1,10 +1,7 @@
 package com.wy0225.imbrlabel.mapper;
 
 import com.wy0225.imbrlabel.pojo.DO.ImageDO;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -38,6 +35,24 @@ public interface ImageMapper {
      */
     @Select("select id, name, type, path, annotations, create_time, update_time from image where id = #{id} AND user_id = #{userId}")
     ImageDO selectById(Long id, Long userId);
+
+    /**
+     * 获取前一张图片的ID
+     * @param id 当前图片ID
+     * @param userId 用户ID
+     * @return 前一张图片的ID
+     */
+    @Select("SELECT id FROM image_do WHERE user_id = #{userId} AND id < #{id} ORDER BY id DESC LIMIT 1")
+    Long getPreviousImageIdById(@Param("id") Long id, @Param("userId") Long userId);
+
+    /**
+     * 获取后一张图片的ID
+     * @param id 当前图片ID
+     * @param userId 用户ID
+     * @return 后一张图片的ID
+     */
+    @Select("SELECT id FROM image_do WHERE user_id = #{userId} AND id > #{id} ORDER BY id ASC LIMIT 1")
+    Long getNextImageIdById(@Param("id") Long id, @Param("userId") Long userId);
 
     /**
      * 删除图像

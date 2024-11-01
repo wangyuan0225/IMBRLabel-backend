@@ -64,4 +64,14 @@ public class ImageServiceImpl implements ImageService {
         imageDTO.setAnnotations(image.getAnnotations());
         return imageDTO;
     }
+
+    @Override
+    public Long getPreviousImageId(Long currentImageId,Long userId) {
+        return imageMapper.getPreviousImageIdById(currentImageId, userId);
+    }
+
+    @Override
+    public Long getNextImageId(Long currentImageId,Long userId) {
+        return imageMapper.getNextImageIdById(currentImageId, userId);
+    }
 }
