@@ -241,11 +241,16 @@ public class AnnotationController {
         Long userId = BaseContext.getCurrentId();
         ImageDTO imageDTO = imgService.getImageById(imageId, userId);
 
+        // 获取上一张和下一张图像的ID
+        Long prevImageId = imgService.getPreviousImageId(userId, imageId);
+        Long nextImageId = imgService.getNextImageId(userId, imageId);
         // 将 ImageDTO 转换为 Map
         Map<String, Object> details = new HashMap<>();
         details.put("path", imageDTO.getPath());
         details.put("name", imageDTO.getName());
         details.put("annotations", imageDTO.getAnnotations());
+        details.put("prevImageId", prevImageId); // 添加上一张图像的ID
+        details.put("nextImageId", nextImageId); // 添加下一张图像的ID
 
         System.out.println("Returning image details: " + details);
         return Result.success(details);

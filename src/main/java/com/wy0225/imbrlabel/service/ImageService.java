@@ -33,4 +33,20 @@ public interface ImageService {
      * @return 图片信息
      */
     ImageDTO getImageById(Long id,Long userId);
+
+    /**
+     * 根据用户ID和当前图像ID获取上一张图像的ID
+     * @param userId 用户ID
+     * @param currentId 当前图像的ID
+     * @return 上一张图像的ID
+     */
+    Long getPreviousImageId(Long userId, Long currentId);
+
+    /**
+     * 根据用户ID和当前图像ID获取下一张图像的ID
+     * @param userId 用户ID
+     * @param currentId 当前图像的ID
+     * @return 下一张图像的ID
+     */
+    Long getNextImageId(Long userId, Long currentId);
 }
