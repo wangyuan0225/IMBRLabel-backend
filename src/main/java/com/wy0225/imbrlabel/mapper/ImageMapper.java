@@ -42,7 +42,7 @@ public interface ImageMapper {
      * @param userId 用户ID
      * @return 前一张图片的ID
      */
-    @Select("SELECT id FROM image_do WHERE user_id = #{userId} AND id < #{id} ORDER BY id DESC LIMIT 1")
+    @Select("SELECT id FROM image WHERE user_id = #{userId} AND id < #{id} ORDER BY id DESC LIMIT 1")
     Long getPreviousImageIdById(@Param("id") Long id, @Param("userId") Long userId);
 
     /**
@@ -51,7 +51,7 @@ public interface ImageMapper {
      * @param userId 用户ID
      * @return 后一张图片的ID
      */
-    @Select("SELECT id FROM image_do WHERE user_id = #{userId} AND id > #{id} ORDER BY id ASC LIMIT 1")
+    @Select("SELECT id FROM image WHERE user_id = #{userId} AND id > #{id} ORDER BY id ASC LIMIT 1")
     Long getNextImageIdById(@Param("id") Long id, @Param("userId") Long userId);
 
     /**
