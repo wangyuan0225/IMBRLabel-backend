@@ -3,6 +3,7 @@ package com.wy0225.imbrlabel.controller;
 import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.xml.bind.v2.TODO;
 import com.wy0225.imbrlabel.context.BaseContext;
 import com.wy0225.imbrlabel.method.points;
 import com.wy0225.imbrlabel.pojo.DTO.AnnotationDTO;
@@ -138,10 +139,82 @@ public class AnnotationController {
     public Result<?> autoAnnotation(@RequestBody Map<String, Object> payload) {
         String annotations = (String) payload.get("annotations");
         Integer polygonsides = (Integer) payload.get("polygonSides");
-
+        Long imageId = (Long) payload.get("imageId");
         List<List<Integer>> allPoints = new ArrayList<>();
+
+        //解析现有的annotations
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<Map<String, Object>> annotationsList;
         try {
-            List<String> lines = Files.readAllLines(Paths.get("src/main/resources/static/output_coordinates.txt"));
+            // 解码并解析 JSON 字符串
+            //TODO
+            //StandardCharsets.UTF_8一直有报错,加了String.valueOf
+            String decodedAnnotations = java.net.URLDecoder.decode(annotations, String.valueOf(StandardCharsets.UTF_8));
+            annotationsList = objectMapper.readValue(decodedAnnotations, new TypeReference<>() {
+            });
+        } catch (Exception e) {
+            return Result.error("Failed to parse annotations");
+        }
+
+        // 查找选中的矩形标签
+        Map<String, Object> selectedRectangle = null;
+        for (Map<String, Object> annotation : annotationsList) {
+            if (Boolean.TRUE.equals(annotation.get("active")) && Integer.valueOf(1).equals(annotation.get("type"))) {
+                selectedRectangle = annotation;
+                break;
+            }
+        }
+
+        // 检查是否找到选中的矩形标签
+        if (selectedRectangle == null) {
+            return Result.error("没有符合匹配标准的矩形标签");
+        }
+
+        // 获取矩形标签的坐标
+        List<List<Integer>> coor = (List<List<Integer>>) selectedRectangle.get("coor");
+        if (coor == null || coor.size() != 2) {
+            return Result.error("选中标签的坐标有问题");
+        }
+
+        Integer topLeftX = coor.get(0).get(0);
+        Integer topLeftY = coor.get(0).get(1);
+        Integer bottomRightX = coor.get(1).get(0);
+        Integer bottomRightY = coor.get(1).get(1);
+
+        // 获取当前图片路径
+        ImageDTO imageDTO = imgService.getImageById(imageId, BaseContext.getCurrentId());
+        String imagePath = imageDTO.getPath();
+
+        // TODO
+        //把.py文件的路径更换一下
+        // 调用 Python 脚本并传递坐标
+        String pythonPath = "/2_predictor_bbox.py";
+        ProcessBuilder processBuilder = new ProcessBuilder(
+                "python",
+                pythonPath,
+                "--image_path", imagePath,
+                "--top_left", topLeftX.toString(), topLeftY.toString(),
+                "--bottom_right", bottomRightX.toString(), bottomRightY.toString()
+        );
+
+        processBuilder.redirectErrorStream(true);
+        try {
+            Process process = processBuilder.start();
+            process.waitFor();
+        } catch (Exception e) {
+            return Result.error("调用Python脚本发生错误: " + e.getMessage());
+        }
+
+        try {
+            //这里修改为生成的txt文件路径
+            // 获取图片文件名并去掉扩展名
+            String imageName = Paths.get(imagePath).getFileName().toString();
+            String txtFileName = imageName.replaceFirst("[.][^.]+$", "") + ".txt";
+
+            // 构建 TXT 文件路径，与图片在同一目录
+            String txtFilePath = Paths.get(imagePath).getParent().resolve(txtFileName).toString();
+
+            List<String> lines = Files.readAllLines(Paths.get(txtFilePath));
             // 先读取所有点
             for (String line : lines) {
                 String[] parts = line.split(", ");
@@ -156,17 +229,6 @@ public class AnnotationController {
             List<List<Integer>> coordinates=choicePointCounts(allPoints,polygonsides);
             if(coordinates==null) {
                 return Result.error("采样点数不能超过原始点数：" + allPoints.size());
-            }
-            // 解析现有的 annotation 字符串
-            ObjectMapper objectMapper = new ObjectMapper();
-            List<Map<String, Object>> annotationsList;
-            try {
-                // 解码并解析 JSON 字符串
-                String decodedAnnotations = java.net.URLDecoder.decode(annotations, StandardCharsets.UTF_8);
-                annotationsList = objectMapper.readValue(decodedAnnotations, new TypeReference<>() {
-                });
-            } catch (Exception e) {
-                return Result.error("Failed to parse annotations");
             }
 
             // 创建新的 annotation
