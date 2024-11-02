@@ -241,6 +241,8 @@ public class AnnotationController {
             throw new RuntimeException("执行Python脚本失败: " + e.getMessage());
         }
 
+        //py程序执行完之后移除选中的矩形标签
+        annotationsList.remove(selectedRectangle);
 
         try {
             //这里修改为生成的txt文件路径
