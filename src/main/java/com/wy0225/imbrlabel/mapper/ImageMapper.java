@@ -38,21 +38,23 @@ public interface ImageMapper {
 
     /**
      * 获取前一张图片的ID
-     * @param id 当前图片ID
+     *
+     * @param id     当前图片ID
      * @param userId 用户ID
      * @return 前一张图片的ID
      */
     @Select("SELECT id FROM image WHERE user_id = #{userId} AND id < #{id} ORDER BY id DESC LIMIT 1")
-    Long getPreviousImageIdById(@Param("id") Long id, @Param("userId") Long userId);
+    Long getPreviousImageIdById(Long userId, Long id);
 
     /**
      * 获取后一张图片的ID
-     * @param id 当前图片ID
+     *
+     * @param id     当前图片ID
      * @param userId 用户ID
      * @return 后一张图片的ID
      */
-    @Select("SELECT id FROM image WHERE user_id = #{userId} AND id > #{id} ORDER BY id ASC LIMIT 1")
-    Long getNextImageIdById(@Param("id") Long id, @Param("userId") Long userId);
+    @Select("SELECT id FROM image WHERE user_id = #{userId} AND id > #{id} ORDER BY id LIMIT 1")
+    Long getNextImageIdById(Long userId, Long id);
 
     /**
      * 删除图像

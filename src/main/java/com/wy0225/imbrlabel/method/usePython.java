@@ -1,19 +1,13 @@
 package com.wy0225.imbrlabel.method;
 
-import com.wy0225.imbrlabel.context.BaseContext;
-import com.wy0225.imbrlabel.pojo.Result;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 @Slf4j
 public class usePython {
@@ -21,16 +15,23 @@ public class usePython {
     public static String callPythonScript(String imagePath) {
         // TODO 以下替换
         // Conda 环境名称
-        String condaEnvName = "x-anylabeling";
+        String condaEnvName = "sam";
 
         // Python项目根目录
-        String targetDirectory = "E:/wangy/Documents/Javaweb/wy0225/X-AnyLabeling-main/";
+        String targetDirectory = "E:/wangy/Documents/Python/segment-anything-main/";
 
         // Python脚本路径（用于生成坐标的脚本）
-        String pythonScriptPath = "anylabeling/services/auto_labeling.py";  // 修改为实际的脚本路径
+        String pythonScriptPath = "5_predictor_multimask_param.py";  // 修改为实际的脚本路径
 
-        // 输出坐标文件路径
-        String outputPath = "src/main/resources/static/coordinates.txt";
+        // 输入图片的目录
+        String imageDirectory = Paths.get(imagePath).getParent().toString();
+
+        // 输入图片的文件名
+        String imageFileName = Paths.get(imagePath).getFileName().toString();
+
+        // 输出坐标文件路径，与输入图片在同一目录，并以相同名称但不同的扩展名保存
+        String outputExtension = ".txt"; // 输出文件的扩展名
+        String outputPath = imageDirectory + "/" + imageFileName.replaceFirst("\\.[^\\.]+$", "") + outputExtension;
 
         // 构建命令，添加必要的参数
         String[] command = {
@@ -38,8 +39,7 @@ public class usePython {
                 "cd " + targetDirectory + " && " +
                         "conda activate " + condaEnvName + " && " +
                         "python " + pythonScriptPath +
-                        " --image_path \"" + imagePath + "\"" +
-                        " --output_path \"" + outputPath + "\""
+                        " --image_path \"" + imagePath + "\""
         };
 
         StringBuilder output = new StringBuilder();

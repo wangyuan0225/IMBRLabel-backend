@@ -108,7 +108,7 @@ public class ImageController {
     public Result<?> delete(@RequestParam Long id) {
         Long userId = BaseContext.getCurrentId();
         // 从本地删除，这里加了参数userId
-        String filePath = userId + "/" + imageService.getImageById(id, userId).getPath();
+        String filePath = imageService.getImageById(id, userId).getPath();
         try {
             // 从本地删除文件
             Path path = Paths.get(uploadDir).resolve(filePath).toAbsolutePath().normalize();

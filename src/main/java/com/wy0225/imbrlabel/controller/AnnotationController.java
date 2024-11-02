@@ -1,11 +1,8 @@
 package com.wy0225.imbrlabel.controller;
 
-import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.xml.bind.v2.TODO;
 import com.wy0225.imbrlabel.context.BaseContext;
-import com.wy0225.imbrlabel.method.points;
 import com.wy0225.imbrlabel.pojo.DTO.AnnotationDTO;
 import com.wy0225.imbrlabel.pojo.DTO.ImageDTO;
 import com.wy0225.imbrlabel.pojo.Result;
@@ -18,8 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -27,8 +25,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import static com.wy0225.imbrlabel.method.annotations.*;
-import static com.wy0225.imbrlabel.method.points.*;
+import static com.wy0225.imbrlabel.method.annotations.createAnnotation;
+import static com.wy0225.imbrlabel.method.annotations.parseCoordinates;
+import static com.wy0225.imbrlabel.method.points.choicePointCounts;
 import static com.wy0225.imbrlabel.method.usePython.callPythonScript;
 
 /**
@@ -52,6 +51,7 @@ public class AnnotationController {
 
     /**
      * 添加标注模板
+     *
      * @param annotationDTO 标注模板数据传输对象
      * @return 添加结果
      */
@@ -66,6 +66,7 @@ public class AnnotationController {
 
     /**
      * 获取标注模板列表
+     *
      * @return 标注模板列表
      */
     @GetMapping
@@ -76,6 +77,7 @@ public class AnnotationController {
 
     /**
      * 为图像添加标注
+     *
      * @param payload 请求体
      * @return 添加结果
      */
@@ -89,8 +91,9 @@ public class AnnotationController {
 
     /**
      * 导出标注信息
+     *
      * @param imageId 图像ID
-     * @param type 导出类型
+     * @param type    导出类型
      * @return 导出结果
      */
     @GetMapping("/export")
@@ -110,6 +113,7 @@ public class AnnotationController {
 
     /**
      * 更新标注模板
+     *
      * @param annotationVO 标注模板视图对象
      * @return 更新结果
      */
@@ -121,6 +125,7 @@ public class AnnotationController {
 
     /**
      * 删除标注模板
+     *
      * @param id 标注模板ID
      * @return 删除结果
      */
@@ -132,6 +137,7 @@ public class AnnotationController {
 
     /**
      * 半自动标注
+     *
      * @param payload 请求体
      * @return 自动标注结果
      */
@@ -139,7 +145,7 @@ public class AnnotationController {
     public Result<?> autoAnnotation(@RequestBody Map<String, Object> payload) {
         String annotations = (String) payload.get("annotations");
         Integer polygonsides = (Integer) payload.get("polygonSides");
-        Long imageId = (Long) payload.get("imageId");
+        long imageId = Long.parseLong((String) payload.get("imageId"));
         List<List<Integer>> allPoints = new ArrayList<>();
 
         //解析现有的annotations
@@ -188,22 +194,53 @@ public class AnnotationController {
         // TODO
         //把.py文件的路径更换一下
         // 调用 Python 脚本并传递坐标
-        String pythonPath = "/2_predictor_bbox.py";
-        ProcessBuilder processBuilder = new ProcessBuilder(
-                "python",
-                pythonPath,
-                "--image_path", imagePath,
+        // Conda 环境名称
+        String condaEnvName = "sam";
+
+        // Python项目根目录
+        String targetDirectory = "E:/wangy/Documents/Python/segment-anything-main/";
+
+        // Python脚本路径（用于生成坐标的脚本）
+        String pythonScriptPath = "2_predictor_bbox.py";
+
+        String[] command = {
+                "cmd", "/c",
+                "cd " + targetDirectory + " && " +
+                        "conda activate " + condaEnvName + " && " +
+                        "python " + pythonScriptPath +
+                        " --image_path", uploadDir + imagePath,
                 "--top_left", topLeftX.toString(), topLeftY.toString(),
                 "--bottom_right", bottomRightX.toString(), bottomRightY.toString()
-        );
+        };
 
-        processBuilder.redirectErrorStream(true);
+        StringBuilder output = new StringBuilder();
         try {
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            processBuilder.redirectErrorStream(true);  // 合并错误和标准输出
             Process process = processBuilder.start();
-            process.waitFor();
-        } catch (Exception e) {
-            return Result.error("调用Python脚本发生错误: " + e.getMessage());
+
+            // 读取输出
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                    log.info("Python输出: " + line);
+                }
+            }
+
+            // 等待进程完成
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                log.error("Python脚本执行失败，退出码: " + exitCode);
+                throw new RuntimeException("Python脚本执行失败");
+            }
+
+        } catch (IOException | InterruptedException e) {
+            log.error("执行Python脚本失败", e);
+            throw new RuntimeException("执行Python脚本失败: " + e.getMessage());
         }
+
 
         try {
             //这里修改为生成的txt文件路径
@@ -214,10 +251,10 @@ public class AnnotationController {
             // 构建 TXT 文件路径，与图片在同一目录
             String txtFilePath = Paths.get(imagePath).getParent().resolve(txtFileName).toString();
 
-            List<String> lines = Files.readAllLines(Paths.get(txtFilePath));
+            List<String> lines = Files.readAllLines(Paths.get(uploadDir + txtFilePath));
             // 先读取所有点
             for (String line : lines) {
-                String[] parts = line.split(", ");
+                String[] parts = line.split(",");
                 for (int i = 0; i < parts.length; i += 2) {
                     List<Integer> point = new ArrayList<>();
                     point.add(Integer.parseInt(parts[i]));
@@ -226,8 +263,8 @@ public class AnnotationController {
                 }
             }
 
-            List<List<Integer>> coordinates=choicePointCounts(allPoints,polygonsides);
-            if(coordinates==null) {
+            List<List<Integer>> coordinates = choicePointCounts(allPoints, polygonsides);
+            if (coordinates == null) {
                 return Result.error("采样点数不能超过原始点数：" + allPoints.size());
             }
 
@@ -250,9 +287,9 @@ public class AnnotationController {
     }
 
 
-
     /**
      * 获取图像详细信息
+     *
      * @param imageId 图像ID
      * @return 图像详细信息
      */
@@ -269,7 +306,7 @@ public class AnnotationController {
         details.put("path", imageDTO.getPath());
         details.put("name", imageDTO.getName());
         details.put("annotations", imageDTO.getAnnotations());
-        details.put("prevImageId", prevImageId); // 添加上一张图像的ID
+        details.put("previousImageId", prevImageId); // 添加上一张图像的ID
         details.put("nextImageId", nextImageId); // 添加下一张图像的ID
 
         System.out.println("Returning image details: " + details);
@@ -285,15 +322,15 @@ public class AnnotationController {
     public Result<?> fullautoAnnotation(@RequestBody Map<String, Object> payload) {
         String annotations = (String) payload.get("annotations");
         Integer polygonsides = (Integer) payload.get("polygonSides");
-        Long imageId = (Long) payload.get("imageId");
-        Integer selectedId = (Integer) payload.get("selectedId");   // 选中的标注id
+        long imageId = Long.parseLong((String) payload.get("imageId"));
+        Integer selectedId = (Integer) payload.get("selectedId");
 
         try {
             // 获取图像路径
-           Long userId = BaseContext.getCurrentId();
-           String filePath = userId + "/" + imageService.getImageById(imageId, userId).getPath();
-           Path imagePath = Paths.get(uploadDir).resolve(filePath).toAbsolutePath().normalize();
-            
+            Long userId = BaseContext.getCurrentId();
+            String filePath = imageService.getImageById(imageId, userId).getPath();
+            Path imagePath = Paths.get(uploadDir).resolve(filePath).toAbsolutePath().normalize();
+
             // TODO: 调用Python算法生成坐标
             String coordinatesPath = callPythonScript(imagePath.toString());
             // 假设我们已经生成了坐标文件，并保存在 coordinatesPath 中
@@ -307,7 +344,8 @@ public class AnnotationController {
             List<Map<String, Object>> annotationsList;
             try {
                 String decodedAnnotations = URLDecoder.decode(annotations, StandardCharsets.UTF_8);
-                annotationsList = objectMapper.readValue(decodedAnnotations, new TypeReference<>() {});
+                annotationsList = objectMapper.readValue(decodedAnnotations, new TypeReference<>() {
+                });
             } catch (Exception e) {
                 log.error("解析标注失败", e);
                 return Result.error("解析标注失败: " + e.getMessage());
@@ -321,7 +359,7 @@ public class AnnotationController {
                 // 获取选中标注的坐标
                 String selectedLine = lines.get(selectedId);
                 List<List<Integer>> selectedPoints = parseCoordinates(selectedLine);
-                
+
                 // 根据指定的点数下采样
                 List<List<Integer>> sampledPoints = choicePointCounts(selectedPoints, polygonsides);
                 if (sampledPoints == null) {
@@ -331,13 +369,13 @@ public class AnnotationController {
                 // 找到要删除的标注
                 Iterator<Map<String, Object>> iterator = annotationsList.iterator();
                 String originalLabel = null;
-                int originalIndex=-1;
+                int originalIndex = -1;
                 while (iterator.hasNext()) {
                     Map<String, Object> annotation = iterator.next();
                     // 直接比较 label 和 selectedId
                     if (annotation.get("label").equals(String.valueOf(selectedId))) {
                         originalLabel = (String) annotation.get("label");
-                        originalIndex= (int) annotation.get("index");
+                        originalIndex = (int) annotation.get("index");
                         iterator.remove();  // 删除匹配的标注
                         break;
                     }
@@ -372,7 +410,7 @@ public class AnnotationController {
                 return Result.error("Failed to serialize annotations");
             }
             return Result.success(updatedAnnotations);
-            
+
         } catch (Exception e) {
             return Result.error("Failed to process coordinates: " + e.getMessage());
         }
