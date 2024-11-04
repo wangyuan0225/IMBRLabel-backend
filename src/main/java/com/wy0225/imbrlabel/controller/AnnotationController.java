@@ -334,7 +334,10 @@ public class AnnotationController {
             Path imagePath = Paths.get(uploadDir).resolve(filePath).toAbsolutePath().normalize();
 
             // TODO: 调用Python算法生成坐标
-            String coordinatesPath = callPythonScript(imagePath.toString());
+            String coordinatesPath="";
+            if(selectedId == null) {
+                coordinatesPath = callPythonScript(imagePath.toString());
+            }
             // 假设我们已经生成了坐标文件，并保存在 coordinatesPath 中
             // 读取坐标文件
             if (!Files.exists(Paths.get(coordinatesPath))) {
