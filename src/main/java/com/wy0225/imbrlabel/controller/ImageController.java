@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,7 +47,10 @@ public class ImageController {
             Path userDir = Paths.get(uploadDir, String.valueOf(userId)).toAbsolutePath().normalize();
             Files.createDirectories(userDir);
 
-            Path targetLocation = userDir.resolve(Objects.requireNonNull(file.getOriginalFilename()));
+            // 获取文件名（去掉路径前缀）
+            String originalFilename = Objects.requireNonNull(file.getOriginalFilename());
+            String fileName = new File(originalFilename).getName();
+            Path targetLocation = userDir.resolve(fileName);
             // 重名文件检测
             if (Files.exists(targetLocation)) {
                 return Result.error("同名文件已存在");
