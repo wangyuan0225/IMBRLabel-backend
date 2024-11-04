@@ -337,6 +337,8 @@ public class AnnotationController {
             String coordinatesPath="";
             if(selectedId == null) {
                 coordinatesPath = callPythonScript(imagePath.toString());
+            } else {
+                coordinatesPath = imagePath.toString().replaceFirst("[.][^.]+$", "") + ".txt";
             }
             // 假设我们已经生成了坐标文件，并保存在 coordinatesPath 中
             // 读取坐标文件
