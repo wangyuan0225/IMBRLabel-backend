@@ -203,8 +203,14 @@ public class AnnotationController {
         // Python脚本路径（用于生成坐标的脚本）
         String pythonScriptPath = "2_predictor_bbox.py";
 
+        // 规范化路径格式
+        targetDirectory = targetDirectory.replace("\\", "/");
+        imagePath = imagePath.replace("\\", "/");
+
         String[] command = {
-                "cmd", "/c",
+                "cmd.exe",
+                "/c",
+                "D:/Anaconda3/Scripts/activate.bat" + " && " +
                 "cd " + targetDirectory + " && " +
                         "conda activate " + condaEnvName + " && " +
                         "python " + pythonScriptPath +

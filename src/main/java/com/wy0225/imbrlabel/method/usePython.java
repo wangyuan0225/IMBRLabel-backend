@@ -33,12 +33,18 @@ public class usePython {
         String outputExtension = ".txt"; // 输出文件的扩展名
         String outputPath = imageDirectory + "/" + imageFileName.replaceFirst("\\.[^\\.]+$", "") + outputExtension;
 
-        // 构建命令，添加必要的参数
+        // 规范化路径格式
+        targetDirectory = targetDirectory.replace("\\", "/");
+        imagePath = imagePath.replace("\\", "/");
+
+        // 修改命令数组的构建方式
         String[] command = {
-                "cmd", "/c",
-                "cd " + targetDirectory + " && " +
+                "cmd.exe",
+                "/c",
+                "D:/Anaconda3/Scripts/activate.bat" + " && " +
+                        "cd /d \"" + targetDirectory + "\" && " +
                         "conda activate " + condaEnvName + " && " +
-                        "python " + pythonScriptPath +
+                        "python \"" + pythonScriptPath + "\"" +
                         " --image_path \"" + imagePath + "\""
         };
 
@@ -50,7 +56,7 @@ public class usePython {
 
             // 读取输出
             try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                    new InputStreamReader(process.getInputStream(), "GBK"))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     output.append(line).append("\n");
