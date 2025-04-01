@@ -83,19 +83,19 @@ public class UserController {
         String newPwd = updatePasswordDTO.getNew_pwd();
         String rePwd = updatePasswordDTO.getRe_pwd();
         if (!StringUtils.hasLength(oldPwd) || !StringUtils.hasLength(newPwd) || !StringUtils.hasLength(rePwd)) {
-            return Result.error("缺少必要的参数");
+            return Result.error("Required parameters are missing");
         }
 
         // 原密码是否正确：获取原token中存储的id，用id查询密码（是加密过的），该密码与加密后的oldPwd进行对比
         Long currentId = BaseContext.getCurrentId();
         UserDO user = userService.getUserById(currentId);
         if (!user.getPassword().equals(DigestUtils.md5DigestAsHex(oldPwd.getBytes()))) {
-            return Result.error("原密码填写不正确");
+            return Result.error("The old password is wrong");
         }
 
         // 检验原密码和新密码是否一样
         if (oldPwd.equals(newPwd)) {
-            return Result.error("新密码与原密码一致");
+            return Result.error("The new password is the same as the old one");
         }
 
         // 重设密码
@@ -108,7 +108,7 @@ public class UserController {
         // 删除redis中存储的旧token
         redisTemplate.delete(token);
 
-        return Result.success("修改密码成功");
+        return Result.success("Reset successfully");
     }
 
     // 获取用户信息
@@ -118,7 +118,7 @@ public class UserController {
         UserDO user = userService.getUserById(currentId);
 
         if (user == null) {
-            return Result.error("用户不存在");
+            return Result.error("User does not exist");
         }
 
         UserVO userVO = UserVO.builder()
@@ -137,7 +137,7 @@ public class UserController {
         UserDO userDO = userService.getUserById(currentId);
 
         if (userDO == null) {
-            return Result.error("用户不存在");
+            return Result.error("User does not exist");
         }
 
         UserDTO user = UserDTO.builder()

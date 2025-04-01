@@ -58,7 +58,7 @@ public class AnnotationController {
     @PostMapping
     public Result<?> addAnnotation(@RequestBody AnnotationDTO annotationDTO) {
         if (annotationDTO.getName() == null || annotationDTO.getName().isEmpty()) {
-            return Result.error("模板名称不能为空");
+            return Result.error("Template name can not be null");
         }
         annotationService.addAnnotation(annotationDTO);
         return Result.success();
@@ -173,13 +173,13 @@ public class AnnotationController {
 
         // 检查是否找到选中的矩形标签
         if (selectedRectangle == null) {
-            return Result.error("没有符合匹配标准的矩形标签");
+            return Result.error("No rectangle labels match the criteria");
         }
 
         // 获取矩形标签的坐标
         List<List<Integer>> coor = (List<List<Integer>>) selectedRectangle.get("coor");
         if (coor == null || coor.size() != 2) {
-            return Result.error("选中标签的坐标有问题");
+            return Result.error("The coordinates of the selected label are incorrect");
         }
 
         Integer topLeftX = coor.get(0).get(0);
@@ -225,20 +225,20 @@ public class AnnotationController {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     output.append(line).append("\n");
-                    log.info("Python输出: " + line);
+                    log.info("Python output: " + line);
                 }
             }
 
             // 等待进程完成
             int exitCode = process.waitFor();
             if (exitCode != 0) {
-                log.error("Python脚本执行失败，退出码: " + exitCode);
-                throw new RuntimeException("Python脚本执行失败");
+                log.error("Python script execute failed, exit code: " + exitCode);
+                throw new RuntimeException("Python script execute failed");
             }
 
         } catch (IOException | InterruptedException e) {
-            log.error("执行Python脚本失败", e);
-            throw new RuntimeException("执行Python脚本失败: " + e.getMessage());
+            log.error("Python script execute failed", e);
+            throw new RuntimeException("Python script execute failed: " + e.getMessage());
         }
 
         //py程序执行完之后移除选中的矩形标签
@@ -267,7 +267,7 @@ public class AnnotationController {
 
             List<List<Integer>> coordinates = choicePointCounts(allPoints, polygonsides);
             if (coordinates == null) {
-                return Result.error("采样点数不能超过原始点数：" + allPoints.size());
+                return Result.error("The number of sampling points cannot exceed the number of original points: " + allPoints.size());
             }
 
             // 创建新的 annotation
@@ -326,6 +326,7 @@ public class AnnotationController {
         Integer polygonsides = (Integer) payload.get("polygonSides");
         long imageId = Long.parseLong((String) payload.get("imageId"));
         Integer selectedId = (Integer) payload.get("selectedId");
+        System.out.println("selectId:"+selectedId);
 
         try {
             // 获取图像路径
@@ -335,15 +336,16 @@ public class AnnotationController {
 
             // TODO: 调用Python算法生成坐标
             String coordinatesPath="";
-            if(selectedId == null) {
-                coordinatesPath = callPythonScript(imagePath.toString());
-            } else {
-                coordinatesPath = imagePath.toString().replaceFirst("[.][^.]+$", "") + ".txt";
-            }
+//            if(selectedId == null) {
+//                coordinatesPath = callPythonScript(imagePath.toString());
+//            } else {
+//                coordinatesPath = imagePath.toString().replaceFirst("[.][^.]+$", "") + ".txt";
+//            }
+            coordinatesPath="src/main/resources/test1.txt";
             // 假设我们已经生成了坐标文件，并保存在 coordinatesPath 中
             // 读取坐标文件
             if (!Files.exists(Paths.get(coordinatesPath))) {
-                return Result.error("坐标文件不存在");
+                return Result.error("coordinate file doesn't exist");
             }
 
             // 解析现有的标注
@@ -354,8 +356,8 @@ public class AnnotationController {
                 annotationsList = objectMapper.readValue(decodedAnnotations, new TypeReference<>() {
                 });
             } catch (Exception e) {
-                log.error("解析标注失败", e);
-                return Result.error("解析标注失败: " + e.getMessage());
+                log.error("Failed to parse the annotation", e);
+                return Result.error("Failed to parse the annotation: " + e.getMessage());
             }
 
             // 读取坐标文件
@@ -370,7 +372,7 @@ public class AnnotationController {
                 // 根据指定的点数下采样
                 List<List<Integer>> sampledPoints = choicePointCounts(selectedPoints, polygonsides);
                 if (sampledPoints == null) {
-                    return Result.error("采样点数不能超过原始点数：" + selectedPoints.size());
+                    return Result.error("The number of sampling points cannot exceed the number of original points:" + selectedPoints.size());
                 }
 
                 // 找到要删除的标注

@@ -38,12 +38,12 @@ public class ImageController {
     @PostMapping
     public Result<?> upload(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
-            return Result.error("文件不能为空");
+            return Result.error("File can not be null");
         }
         try {
             Long userId = BaseContext.getCurrentId();
 
-            //创建用户专属文件夹（文件夹名就是UserId）  路径变成user/image
+            //创建用户专属文件夹（文件夹名就是UserId） 路径变成user/image
             Path userDir = Paths.get(uploadDir, String.valueOf(userId)).toAbsolutePath().normalize();
             Files.createDirectories(userDir);
 
@@ -53,12 +53,12 @@ public class ImageController {
             Path targetLocation = userDir.resolve(fileName);
             // 重名文件检测
             if (Files.exists(targetLocation)) {
-                return Result.error("同名文件已存在");
+                return Result.error("A file with the same name already exists");
             }
             // 图像格式支持
             String contentType = file.getContentType();
             if (contentType == null || !contentType.startsWith("image/")) {
-                return Result.error("文件类型只能为图片");
+                return Result.error("The file type can only be an image");
             }
             Files.copy(file.getInputStream(), targetLocation);
             // 获取相对路径
@@ -66,9 +66,9 @@ public class ImageController {
             // 创建并保存 ImageDTO 对象
             ImageDTO imageDTO = getImageDTO(file, contentType, relativePath);
             imageService.upload(imageDTO);
-            return Result.success("文件上传成功: " + relativePath);
+            return Result.success("File uploads successfully: " + relativePath);
         } catch (IOException ex) {
-            return Result.error("文件上传失败: " + ex.getMessage());
+            return Result.error("File uploads failed: " + ex.getMessage());
         }
     }
 
@@ -118,7 +118,7 @@ public class ImageController {
             Path path = Paths.get(uploadDir).resolve(filePath).toAbsolutePath().normalize();
             Files.deleteIfExists(path);
         } catch (IOException e) {
-            return Result.error("文件删除失败: " + e.getMessage());
+            return Result.error("File delete failed: " + e.getMessage());
         }
         // 从数据库删除记录
         imageService.delete(id,userId);

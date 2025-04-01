@@ -7,17 +7,22 @@ spring:
     # 连接数据库的用户名
     username: root
     # 连接数据库的密码
-    password: 123456
+    password: 1234
   data:
     redis:
       database: 0
       port: 6379
-      host: 192.168.232.129
-      password: 123456
+      host: localhost
+      password: 1234
   servlet:
     multipart:
-      max-file-size: 50MB
-      max-request-size: 50MB
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+      file-size-threshold: 2MB
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
 
 mybatis:
   configuration:
@@ -26,7 +31,7 @@ mybatis:
     # 配置mybatis的日志，指定输出到控制台
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 file:
-  upload-dir: C:/Users/wangy/.imbr/upload/
+  upload-dir: C:\\Users\\zhaoyue\\.imbr\\upload\\
 
 label:
   jwt:

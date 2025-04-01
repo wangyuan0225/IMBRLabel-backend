@@ -76,7 +76,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
-            <version>2.17.2</version>
+            <version>2.15.2</version>
         </dependency>
         <!-- csv 导出 -->
         <dependency>
@@ -136,6 +136,33 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
             <version>2.4.0</version>
         </dependency>
+
+        <!-- JSch -->
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.55</version> <!-- 使用最新版本 -->
+        </dependency>
+
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20231013</version> <!-- 使用最新版本 -->
+        </dependency>
+
+        <!--jackSon-->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.15.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.4</version>
+        </dependency>
+
 </dependencies>
     <build>
         <plugins>

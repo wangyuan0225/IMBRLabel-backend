@@ -18,10 +18,11 @@ public class usePython {
         String condaEnvName = "sam";
 
         // Python项目根目录
-        String targetDirectory = "E:/wangy/Documents/Python/segment-anything-main/";
+        String targetDirectory = "D:\\pythonCode\\PPO";
 
         // Python脚本路径（用于生成坐标的脚本）
-        String pythonScriptPath = "5_predictor_multimask_param.py";  // 修改为实际的脚本路径
+//        String pythonScriptPath = "5_predictor_multimask_param.py";  // todo 修改为实际的脚本路径
+        String pythonScriptPath = "predict.py";
 
         // 输入图片的目录
         String imageDirectory = Paths.get(imagePath).getParent().toString();
@@ -39,7 +40,8 @@ public class usePython {
                 "cd " + targetDirectory + " && " +
                         "conda activate " + condaEnvName + " && " +
                         "python " + pythonScriptPath +
-                        " --image_path \"" + imagePath + "\""
+                        " --image_path \"" + imagePath +
+                        " --output_path \"" + outputPath + "\""
         };
 
         StringBuilder output = new StringBuilder();
