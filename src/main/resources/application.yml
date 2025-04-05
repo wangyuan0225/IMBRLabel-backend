@@ -34,7 +34,7 @@ server:
     path: /IMBR_Data/Student-home/2023M_ShiGuangze
   python:
     env: /usr/local/anaconda3/bin/python
-    script: /IMBR_Data/Student-home/2023M_ShiGuangze/code/SAM-Med3D/infer_sequence_bak2.py
+    script: /IMBR_Data/Student-home/2023M_ShiGuangze/code/SAM-Med3D/infer_sequence.py
 
 mybatis:
   configuration:
